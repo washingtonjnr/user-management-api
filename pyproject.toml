@@ -1,0 +1,25 @@
+[tool.ruff]
+# Regras que vão checar seu código
+select = [
+    "E",   # erros pycodestyle
+    "W",   # warnings pycodestyle  
+    "F",   # Pyflakes (erros como variáveis não usadas)
+    "I",   # isort (organização de imports)
+    "UP",  # pyupgrade (sintaxe moderna)
+    "B",   # flake8-bugbear (bugs comuns)
+]
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+strict = true
+
+# Ignorar regras específicas se quiser
+ignore = ["E501"]  # E501 = linha muito longa
+
+# Excluir pastas
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "migrations",
+]
