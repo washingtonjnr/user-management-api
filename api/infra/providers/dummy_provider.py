@@ -9,7 +9,7 @@ class DummyProvider(DummyProviderBase):
     def __init__(self, http_client: HttpClientBase) -> None:
         self._http_client = http_client
 
-    async def get_user_additional_data(self, random_id: str) -> dict[str, Any]:
+    def get_user_additional_data(self, random_id: str) -> dict[str, Any]:
         url = f"{settings.dummy_url}/user/{random_id}"
 
-        return await self._http_client.get(url)
+        return self._http_client.get(url)

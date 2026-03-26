@@ -1,19 +1,26 @@
 from flask import Flask
 
-from api.config.settings import settings
+from api.config.spec import spec
 from api.entrypoints.blueprints import app_bp
 from api.entrypoints.blueprints.health import health_route
+from api.infra.db.models.base_model import Base
+from api.infra.db.session import engine
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
 
-    app.config["JWT_SECRET_KEY"] = settings.jwt_secret_key
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = settings.jwt_access_token_expires
+    spec.register(app)
+
+    _register_db()
 
     _register_blueprints(app)
 
     return app
+
+
+def _register_db() -> None:
+    Base.metadata.create_all(bind=engine)
 
 
 def _register_blueprints(app: Flask) -> None:
