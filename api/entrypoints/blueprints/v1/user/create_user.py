@@ -25,6 +25,7 @@ def create_user():
         return jsonify({"errors": e.errors()}), 422
 
     usecase = CreateUserUseCase(user_repository=_user_repository)
+
     output = usecase.execute(body)
 
     return jsonify(output.model_dump()), 201
