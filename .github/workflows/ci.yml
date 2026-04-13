@@ -7,30 +7,67 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-test:
+  lint:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ruff lint
+        run: ruff check api/
+
+      - name: Mypy type check
+        run: mypy api/
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      APP_JWT_SECRET_KEY: ${{ secrets.APP_JWT_SECRET_KEY }}
+      APP_DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      APP_DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}
+      APP_DUMMY_URL: ${{ vars.APP_DUMMY_URL }}
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.12"
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt flake8 pytest pytest-cov
+        run: pip install -r requirements.txt pytest pytest-cov
 
-      - name: Lint
-        run: flake8 app/ main.py
+      - name: Run tests
+        run: pytest --cov=api --cov-report=term-missing
 
-      - name: Test
-        run: pytest --cov=app --cov-report=term-missing
-
-  docker-build:
+  build:
     runs-on: ubuntu-latest
-    needs: lint-and-test
-    if: github.ref == 'refs/heads/main'
+    needs: test
 
     steps:
       - uses: actions/checkout@v4
